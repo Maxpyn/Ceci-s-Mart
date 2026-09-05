@@ -20,6 +20,8 @@ urlpatterns = [
 
     # Sales
     path("sell/", views.new_sale, name="new_sale"),
+    path("offline-sell/", views.offline_pos, name="offline_pos"),
+    path("offline-sell/sync/", views.sync_offline_sale, name="sync_offline_sale"),
     path("sales/", views.sales_history, name="sales_history"),
     path("sales/list/", views.sales_history, name="sales_list"),
     path("sale/<int:pk>/", views.sale_detail, name="sale_detail"),

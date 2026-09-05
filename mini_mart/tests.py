@@ -1,4 +1,5 @@
 from decimal import Decimal
+import json
 
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
@@ -113,3 +114,27 @@ class PosWorkflowTests(TestCase):
 
 		with self.assertRaises(ProtectedError):
 			self.product.delete()
+
+	def test_offline_sale_sync_records_paid_sale_and_reduces_stock(self):
+		response = self.client.post(
+			reverse("mini_mart:sync_offline_sale"),
+			data=json.dumps({"items": [{"product_id": self.product.pk, "quantity": 2}]}),
+			content_type="application/json",
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.json()["status"], "synced")
+		sale = Sale.objects.get()
+		self.assertEqual(sale.amount_paid, Decimal("300.00"))
+		self.assertEqual(Product.objects.get(pk=self.product.pk).quantity, 8)
+
+	def test_offline_sale_sync_rejects_insufficient_stock(self):
+		response = self.client.post(
+			reverse("mini_mart:sync_offline_sale"),
+			data=json.dumps({"items": [{"product_id": self.product.pk, "quantity": 11}]}),
+			content_type="application/json",
+		)
+
+		self.assertEqual(response.status_code, 400)
+		self.assertFalse(Sale.objects.exists())
+		self.assertEqual(Product.objects.get(pk=self.product.pk).quantity, 10)

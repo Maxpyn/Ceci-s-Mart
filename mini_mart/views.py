@@ -6,6 +6,7 @@ from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from django.db.models import Sum, F, DecimalField, Q
 from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from .forms import ProductForm, CustomerForm # remove SaleForm, PaymentForm if you don't use them
 from .models import Product, Sale, SaleItem, Customer
@@ -208,6 +209,86 @@ def new_sale(request):
         'new_sale.html',
         {'products': products}
     )
+
+
+def offline_pos(request):
+    products = Product.objects.filter(
+        quantity__gt=0,
+        is_available=True,
+    ).order_by('name')
+    product_data = [
+        {
+            'id': product.id,
+            'name': product.name,
+            'price': str(product.selling_price),
+            'stock': product.quantity,
+        }
+        for product in products
+    ]
+    return render(request, 'offline_pos.html', {'products': product_data})
+
+
+@csrf_exempt
+@require_POST
+def sync_offline_sale(request):
+    try:
+        payload = request.body.decode('utf-8')
+        import json
+        data = json.loads(payload)
+        items = data.get('items', [])
+        if not items:
+            raise ValueError('The sale has no items.')
+
+        with transaction.atomic():
+            total_amount = Decimal('0.00')
+            cost_amount = Decimal('0.00')
+            sale_items = []
+            quantities = {}
+
+            for item in items:
+                product_id = str(item['product_id'])
+                quantity = int(item['quantity'])
+                if quantity <= 0:
+                    raise ValueError('Invalid quantity.')
+                quantities[product_id] = quantities.get(product_id, 0) + quantity
+
+            products = {
+                str(product.id): product
+                for product in Product.objects.select_for_update().filter(
+                    id__in=quantities,
+                    is_available=True,
+                )
+            }
+            if len(products) != len(quantities):
+                raise ValueError('A product is no longer available.')
+
+            for product_id, quantity in quantities.items():
+                product = products[product_id]
+                if quantity > product.quantity:
+                    raise ValueError(f'Not enough stock for {product.name}.')
+                total_amount += product.selling_price * quantity
+                cost_amount += product.cost_price * quantity
+                sale_items.append((product, quantity, product.selling_price))
+
+            sale = Sale.objects.create(
+                customer=None,
+                total_amount=total_amount,
+                cost_amount=cost_amount,
+                amount_paid=total_amount,
+            )
+            for product, quantity, price in sale_items:
+                SaleItem.objects.create(
+                    sale=sale,
+                    product=product,
+                    quantity=quantity,
+                    unit_price=price,
+                )
+                product.quantity -= quantity
+                product.save(update_fields=['quantity'])
+
+        return JsonResponse({'status': 'synced', 'sale_id': sale.id})
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        return JsonResponse({'error': str(error)}, status=400)
 
 def record_payment(request, pk):
     """Single source of truth for payments. Uses Sale.balance from model."""
@@ -434,8 +515,27 @@ def manifest(request):
 
 def sw(request):
     sw_code = """
+        const CACHE = 'ceemart-shell-v1';
+        const SHELL = ['/', '/offline-sell/'];
+
+        self.addEventListener('install', event => {
+            event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
+            self.skipWaiting();
+        });
+
+        self.addEventListener('activate', event => {
+            event.waitUntil(self.clients.claim());
+        });
+
     self.addEventListener('fetch', event => {
-      // Online-first for now.
+            if (event.request.method !== 'GET') return;
+            event.respondWith(
+                fetch(event.request).then(response => {
+                    const copy = response.clone();
+                    caches.open(CACHE).then(cache => cache.put(event.request, copy));
+                    return response;
+                }).catch(() => caches.match(event.request).then(cached => cached || caches.match('/offline-sell/')))
+            );
     });
     """
     return HttpResponse(sw_code, content_type='application/javascript')

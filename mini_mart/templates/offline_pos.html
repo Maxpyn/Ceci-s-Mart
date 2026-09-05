@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="page-kicker">Offline POS</div>
+        <h1 class="fw-bold mb-1">Sell from your phone</h1>
+        <p class="text-muted mb-0">Sales are saved on this phone when the internet is unavailable.</p>
+    </div>
+    <span id="connection-status" class="badge text-bg-success">Online</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <input id="offline-search" class="form-control form-control-lg mb-3" type="search" placeholder="Search products..." autocomplete="off">
+        <div id="offline-products" class="list-group"></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card cart-panel">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Current basket</strong>
+                <span id="queued-count" class="badge text-bg-warning">0 queued</span>
+            </div>
+            <ul id="offline-cart" class="list-group list-group-flush"></ul>
+            <div class="card-body">
+                <div class="page-kicker">Amount due</div>
+                <h2 class="fw-bold">N<span id="offline-total">0.00</span></h2>
+                <button id="complete-sale" class="btn btn-success w-100 mt-2" type="button">Complete sale</button>
+                <button id="sync-sales" class="btn btn-outline-primary w-100 mt-2" type="button">Sync saved sales</button>
+                <div id="offline-message" class="small text-muted mt-3" role="status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ products|json_script:"server-products" }}
+<script>
+const serverProducts = JSON.parse(document.getElementById('server-products').textContent);
+const productKey = 'ceemart-products';
+const queueKey = 'ceemart-offline-sales';
+let products = JSON.parse(localStorage.getItem(productKey) || 'null') || serverProducts;
+let cart = {};
+
+localStorage.setItem(productKey, JSON.stringify(products));
+const search = document.getElementById('offline-search');
+const productList = document.getElementById('offline-products');
+const cartList = document.getElementById('offline-cart');
+const total = document.getElementById('offline-total');
+const message = document.getElementById('offline-message');
+const status = document.getElementById('connection-status');
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, character => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'}[character]));
+}
+
+function renderProducts() {
+    const query = search.value.trim().toLowerCase();
+    const matches = products.filter(product => product.name.toLowerCase().includes(query));
+    productList.innerHTML = matches.map(product => `
+        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-product-id="${product.id}">
+            <span>${escapeHtml(product.name)}<small class="d-block text-muted">Stock: ${product.stock}</small></span>
+            <strong>N${Number(product.price).toFixed(2)}</strong>
+        </button>
+    `).join('') || '<div class="text-muted p-3">No matching products in the saved catalog.</div>';
+}
+
+function renderCart() {
+    let amount = 0;
+    cartList.innerHTML = Object.values(cart).map(item => {
+        const lineTotal = Number(item.price) * item.quantity;
+        amount += lineTotal;
+        return `<li class="list-group-item d-flex justify-content-between"><span>${escapeHtml(item.name)} x ${item.quantity}</span><strong>N${lineTotal.toFixed(2)}</strong></li>`;
+    }).join('') || '<li class="list-group-item text-muted">Basket is empty.</li>';
+    total.textContent = amount.toFixed(2);
+}
+
+function renderQueueCount() {
+    const count = JSON.parse(localStorage.getItem(queueKey) || '[]').length;
+    document.getElementById('queued-count').textContent = `${count} queued`;
+}
+
+function setConnectionStatus() {
+    const online = navigator.onLine;
+    status.textContent = online ? 'Online' : 'Offline';
+    status.className = `badge ${online ? 'text-bg-success' : 'text-bg-warning'}`;
+}
+
+async function syncSales() {
+    const queue = JSON.parse(localStorage.getItem(queueKey) || '[]');
+    if (!queue.length || !navigator.onLine) {
+        renderQueueCount();
+        return;
+    }
+    const remaining = [];
+    for (const sale of queue) {
+        try {
+            const response = await fetch('{% url "mini_mart:sync_offline_sale" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(sale)
+            });
+            if (!response.ok) remaining.push(sale);
+        } catch (error) {
+            remaining.push(sale);
+        }
+    }
+    localStorage.setItem(queueKey, JSON.stringify(remaining));
+    renderQueueCount();
+    message.textContent = remaining.length ? 'Some saved sales still need syncing.' : 'Saved sales are synced.';
+}
+
+productList.addEventListener('click', event => {
+    const button = event.target.closest('[data-product-id]');
+    if (!button) return;
+    const product = products.find(item => String(item.id) === button.dataset.productId);
+    if (!product) return;
+    const current = cart[product.id] || {...product, quantity: 0};
+    if (current.quantity >= product.stock) {
+        message.textContent = 'That is more than the saved stock level.';
+        return;
+    }
+    current.quantity += 1;
+    cart[product.id] = current;
+    renderCart();
+});
+
+document.getElementById('complete-sale').addEventListener('click', async () => {
+    const items = Object.values(cart).map(item => ({product_id: item.id, quantity: item.quantity}));
+    if (!items.length) {
+        message.textContent = 'Add a product first.';
+        return;
+    }
+    const sale = {items};
+    const queue = JSON.parse(localStorage.getItem(queueKey) || '[]');
+    if (navigator.onLine) {
+        try {
+            const response = await fetch('{% url "mini_mart:sync_offline_sale" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(sale)
+            });
+            if (!response.ok) throw new Error('Sync failed');
+            message.textContent = 'Sale recorded online.';
+        } catch (error) {
+            queue.push(sale);
+            localStorage.setItem(queueKey, JSON.stringify(queue));
+            message.textContent = 'Internet failed. Sale saved on this phone.';
+        }
+    } else {
+        queue.push(sale);
+        localStorage.setItem(queueKey, JSON.stringify(queue));
+        message.textContent = 'Offline sale saved on this phone.';
+    }
+    for (const item of items) {
+        const product = products.find(product => product.id === item.product_id);
+        if (product) product.stock -= item.quantity;
+    }
+    localStorage.setItem(productKey, JSON.stringify(products));
+    cart = {};
+    renderProducts();
+    renderCart();
+    renderQueueCount();
+});
+
+document.getElementById('sync-sales').addEventListener('click', syncSales);
+search.addEventListener('input', renderProducts);
+window.addEventListener('online', () => { setConnectionStatus(); syncSales(); });
+window.addEventListener('offline', setConnectionStatus);
+renderProducts();
+renderCart();
+renderQueueCount();
+setConnectionStatus();
+</script>
+{% endblock %}
