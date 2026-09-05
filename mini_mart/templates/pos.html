@@ -1,0 +1,36 @@
+<!-- 1. Search box that never loses focus -->
+<input type="text" id="search-box" autofocus autocomplete="off" placeholder="Scan/ Search...">
+
+<!-- 2. Results drop down -->
+<div id="search-results"></div> 
+
+<!-- 3. Cart sidebar that updates live -->
+<div id="cart-summary"> Items: <span id="cart-count">0</span> </div>
+
+<script>
+const searchBox = document.getElementById('search-box');
+searchBox.focus(); // Always keep focus for scanner
+
+searchBox.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        let code = searchBox.value.trim();
+        if(code) {
+            addToCart(code, 1); // qty = 1 default. Change qty with * like 3*1234
+            searchBox.value = ''; // Clear instantly for next scan
+        }
+    }
+});
+
+function addToCart(code, qty){
+    fetch("{% url 'add_to_cart_ajax' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `product_id=${code}&qty=${qty}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('cart-count').innerText = data.total_items;
+        // TODO: re-render mini cart list here without reload
+    });
+}
+</script>

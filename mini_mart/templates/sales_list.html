@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3 class="mb-3">📊 Sales History</h3>
+
+{% for sale in sales %}
+
+<div class="card mb-2 p-3">
+
+    <h5>₦{{ sale.total_amount }}</h5>
+
+    <p>
+        {% if sale.customer %}
+            👤 {{ sale.customer.name }}
+        {% else %}
+            👤 Walk-in Customer
+        {% endif %}
+    </p>
+
+    <small>{{ sale.created_at }}</small>
+
+</div>
+
+{% empty %}
+
+<div class="alert alert-info">
+    No sales yet.
+</div>
+
+{% endfor %}
+
+{% endblock %}

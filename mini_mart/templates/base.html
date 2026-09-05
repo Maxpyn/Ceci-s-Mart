@@ -1,0 +1,1078 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <meta name="theme-color" content="#050505">
+
+    <title>CeeMart POS</title>
+
+    <link
+        rel="apple-touch-icon"
+        href="/static/icons/icon-192.png"
+    >
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    >
+
+    <!-- Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+<style>
+
+/* =========================================================
+   CEE MART — PREMIUM DARK POS THEME
+   Visual changes only.
+   Django functionality remains untouched.
+========================================================= */
+
+:root {
+
+    --cm-black: #050505;
+    --cm-surface: #0b0b0b;
+    --cm-card: #111111;
+    --cm-card-hover: #151515;
+
+    --cm-border: #222222;
+    --cm-border-light: #2a2a2a;
+
+    --cm-white: #ffffff;
+    --cm-text: #e5e7eb;
+    --cm-muted: #c4c9d1;
+    --cm-subtle: #6b7280;
+
+    --cm-purple: #8b5cf6;
+    --cm-purple-light: #a78bfa;
+
+    --cm-green: #22c55e;
+    --cm-green-dark: #16a34a;
+
+    --cm-red: #ef4444;
+    --cm-red-dark: #dc2626;
+
+    --cm-radius: 20px;
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--cm-black);
+}
+
+body {
+
+    margin: 0;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(139, 92, 246, 0.07),
+            transparent 30%
+        ),
+        var(--cm-black);
+
+    color: var(--cm-text);
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 14px;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.container {
+
+    max-width: 1300px !important;
+
+    padding-top: 24px;
+
+    padding-bottom: 125px;
+}
+
+
+/* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+
+    color: var(--cm-white);
+
+    letter-spacing: -0.025em;
+}
+
+h1 {
+    font-weight: 800;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 700;
+}
+
+p {
+    color: var(--cm-muted);
+}
+
+.text-muted {
+    color: var(--cm-muted) !important;
+}
+
+.page-kicker {
+
+    color: var(--cm-purple-light);
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.12em;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.card {
+
+    background: var(--cm-card) !important;
+
+    color: var(--cm-text);
+
+    border:
+        1px solid var(--cm-border) !important;
+
+    border-radius:
+        var(--cm-radius) !important;
+
+    box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.22);
+
+    overflow: hidden;
+
+    transition:
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.card:hover {
+
+    border-color:
+        var(--cm-border-light) !important;
+}
+
+.card-header {
+
+    background:
+        transparent !important;
+
+    color:
+        var(--cm-white);
+
+    border-bottom:
+        1px solid var(--cm-border) !important;
+
+    padding:
+        17px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+
+/* =========================================================
+   KPI CARDS
+========================================================= */
+
+.kpi-red {
+
+    background:
+        linear-gradient(
+            135deg,
+            #170707,
+            #260b0b
+        ) !important;
+
+    border:
+        1px solid rgba(239, 68, 68, 0.25) !important;
+}
+
+.kpi-green {
+
+    background:
+        linear-gradient(
+            135deg,
+            #06150b,
+            #0a2112
+        ) !important;
+
+    border:
+        1px solid rgba(34, 197, 94, 0.22) !important;
+}
+
+.kpi-gold {
+
+    background:
+        linear-gradient(
+            135deg,
+            #171006,
+            #241706
+        ) !important;
+}
+
+
+/* =========================================================
+   KPI NUMBERS
+========================================================= */
+
+.kpi-big {
+
+    font-size:
+        clamp(32px, 5vw, 48px);
+
+    line-height: 1;
+
+    font-weight: 800;
+
+    letter-spacing: -0.04em;
+
+    color: var(--cm-white);
+}
+
+
+/* =========================================================
+   FORMS / SEARCH
+========================================================= */
+
+.form-control,
+.form-select {
+
+    background:
+        #0b0b0b !important;
+
+    color:
+        var(--cm-white) !important;
+
+    border:
+        1px solid var(--cm-border-light) !important;
+
+    border-radius:
+        13px;
+
+    min-height:
+        45px;
+
+    box-shadow:
+        none !important;
+}
+
+.form-control,
+.form-select,
+.form-select option {
+
+    color:
+        var(--cm-white) !important;
+}
+
+.form-control::placeholder {
+
+    color:
+        #6b7280;
+}
+
+.form-control:focus,
+.form-select:focus {
+
+    background:
+        #0d0d0d !important;
+
+    color:
+        var(--cm-white) !important;
+
+    border-color:
+        var(--cm-purple) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 92, 246, 0.12) !important;
+}
+
+.form-control-lg {
+
+    min-height:
+        54px;
+
+    border-radius:
+        15px;
+
+    font-size:
+        15px;
+}
+
+
+/* =========================================================
+   PRODUCT / LIST ITEMS
+========================================================= */
+
+.list-group {
+
+    border-radius:
+        14px;
+
+    overflow:
+        hidden;
+}
+
+.list-group-item {
+
+    background:
+        var(--cm-card) !important;
+
+    color:
+        var(--cm-text) !important;
+
+    border-color:
+        var(--cm-border) !important;
+
+    padding:
+        15px 17px;
+}
+
+.list-group-item-action {
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.list-group-item-action:hover {
+
+    background:
+        var(--cm-card-hover) !important;
+
+    color:
+        white !important;
+
+    border-color:
+        rgba(139, 92, 246, 0.4) !important;
+
+    transform:
+        translateX(2px);
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn {
+
+    border-radius:
+        12px;
+
+    font-weight:
+        700;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-pill {
+    border-radius: 999px !important;
+    padding: 9px 18px;
+}
+
+
+/* WHITE PRIMARY BUTTON */
+
+.btn-light {
+
+    background:
+        #ffffff !important;
+
+    color:
+        #050505 !important;
+
+    border:
+        none !important;
+}
+
+.btn-light:hover {
+
+    background:
+        #e5e7eb !important;
+
+    color:
+        #000 !important;
+}
+
+
+/* GREEN */
+
+.btn-success {
+
+    background:
+        var(--cm-green) !important;
+
+    border-color:
+        var(--cm-green) !important;
+
+    color:
+        #031109 !important;
+}
+
+.btn-success:hover {
+
+    background:
+        var(--cm-green-dark) !important;
+
+    border-color:
+        var(--cm-green-dark) !important;
+
+    color:
+        white !important;
+}
+
+
+/* RED */
+
+.btn-danger {
+
+    background:
+        var(--cm-red-dark) !important;
+
+    border-color:
+        var(--cm-red-dark) !important;
+}
+
+
+/* OUTLINE */
+
+.btn-outline-primary {
+
+    color:
+        var(--cm-purple-light) !important;
+
+    border-color:
+        rgba(139, 92, 246, 0.45) !important;
+}
+
+.btn-outline-primary:hover {
+
+    background:
+        var(--cm-purple) !important;
+
+    color:
+        white !important;
+
+    border-color:
+        var(--cm-purple) !important;
+}
+
+.btn-outline-light {
+
+    color:
+        white !important;
+
+    border-color:
+        #3a3a3a !important;
+}
+
+.btn-outline-light:hover {
+
+    background:
+        #1f1f1f !important;
+
+    border-color:
+        #555 !important;
+}
+
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge {
+
+    font-weight:
+        700;
+
+    border-radius:
+        999px;
+}
+
+.text-bg-light {
+
+    background:
+        #1f1f1f !important;
+
+    color:
+        #d1d5db !important;
+}
+
+.badge-tag {
+
+    background:
+        #1f1f1f;
+
+    color:
+        #c4b5fd;
+
+    border-radius:
+        999px;
+
+    padding:
+        4px 10px;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+}
+
+
+/* =========================================================
+   CART
+========================================================= */
+
+.cart-panel {
+
+    position:
+        sticky;
+
+    top:
+        20px;
+}
+
+#cart-total {
+
+    color:
+        white;
+
+    font-size:
+        1.15em;
+
+    font-weight:
+        800;
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+.table {
+
+    --bs-table-color: var(--cm-text);
+    --bs-table-bg: var(--cm-card);
+    --bs-table-striped-color: var(--cm-text);
+    --bs-table-striped-bg: #171717;
+    --bs-table-hover-color: var(--cm-white);
+    --bs-table-hover-bg: #1b1b1b;
+
+    color:
+        var(--cm-text) !important;
+
+    border-color:
+        var(--cm-border);
+}
+
+.table thead th {
+
+    background:
+        #0b0b0b;
+
+    color:
+        var(--cm-muted);
+
+    border-color:
+        var(--cm-border);
+
+    font-size:
+        10px;
+
+    text-transform:
+        uppercase;
+
+    letter-spacing:
+        0.08em;
+
+    font-weight:
+        800;
+}
+
+.table td {
+
+    color:
+        var(--cm-text);
+
+    border-color:
+        var(--cm-border);
+
+    vertical-align:
+        middle;
+}
+
+.table tbody tr,
+.table tbody td,
+.table tbody th {
+
+    color:
+        var(--cm-text) !important;
+}
+
+.table-danger,
+.table-danger > td,
+.table-danger > th {
+
+    --bs-table-color: #ffe4e6;
+    --bs-table-bg: #451a1d;
+    --bs-table-striped-bg: #542024;
+
+    color:
+        #ffe4e6 !important;
+}
+
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.alert {
+
+    background:
+        #111111;
+
+    color:
+        var(--cm-text);
+
+    border:
+        1px solid var(--cm-border);
+
+    border-radius:
+        14px;
+}
+
+
+/* =========================================================
+   TOP PILL NAV — AVAILABLE FOR FUTURE PAGES
+========================================================= */
+
+.pill-nav {
+
+    background:
+        #111111;
+
+    border:
+        1px solid var(--cm-border);
+
+    border-radius:
+        999px;
+
+    padding:
+        4px;
+}
+
+.pill-nav a {
+
+    color:
+        var(--cm-muted);
+
+    padding:
+        8px 16px;
+
+    border-radius:
+        999px;
+
+    text-decoration:
+        none;
+
+    font-weight:
+        600;
+}
+
+.pill-nav a.active {
+
+    background:
+        white;
+
+    color:
+        black;
+}
+
+
+/* =========================================================
+   BOTTOM NAVIGATION
+========================================================= */
+
+.bottom-nav {
+
+    position:
+        fixed;
+
+    left:
+        50%;
+
+    bottom:
+        12px;
+
+    transform:
+        translateX(-50%);
+
+    width:
+        min(700px, calc(100% - 24px));
+
+    background:
+        rgba(17, 17, 17, 0.96);
+
+    backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
+        blur(18px);
+
+    border:
+        1px solid #292929;
+
+    border-radius:
+        20px;
+
+    display:
+        flex;
+
+    justify-content:
+        space-around;
+
+    padding:
+        7px 5px;
+
+    z-index:
+        1000;
+
+    box-shadow:
+        0 15px 45px rgba(0, 0, 0, 0.55);
+}
+
+.bottom-nav a {
+
+    text-decoration:
+        none;
+
+    color:
+        #737373;
+
+    font-size:
+        10px;
+
+    font-weight:
+        600;
+
+    text-align:
+        center;
+
+    flex:
+        1;
+
+    padding:
+        7px 3px;
+
+    border-radius:
+        14px;
+
+    transition:
+        all 0.2s ease;
+}
+
+.bottom-nav a:hover {
+
+    color:
+        white;
+
+    background:
+        #181818;
+}
+
+.bottom-nav a.active {
+
+    color:
+        white;
+
+    background:
+        #1f1f1f;
+
+    box-shadow:
+        inset 0 0 0 1px #2c2c2c;
+}
+
+.bottom-nav a.active i {
+
+    color:
+        var(--cm-purple-light);
+}
+
+.bottom-nav i {
+
+    display:
+        block;
+
+    font-size:
+        20px;
+
+    margin-bottom:
+        2px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+
+    .container {
+
+        padding-top:
+            16px;
+
+        padding-bottom:
+            120px;
+    }
+
+    h1 {
+        font-size:
+            27px;
+    }
+
+    h2 {
+        font-size:
+            22px;
+    }
+
+    .card {
+
+        border-radius:
+            17px !important;
+    }
+
+    .card-body {
+        padding:
+            17px;
+    }
+
+    .cart-panel {
+
+        position:
+            static;
+    }
+
+    .bottom-nav {
+
+        bottom:
+            9px;
+
+        border-radius:
+            18px;
+    }
+
+}
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media (min-width: 768px) {
+
+    .bottom-nav {
+        bottom:
+            18px;
+    }
+
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+    width:
+        7px;
+
+    height:
+        7px;
+}
+
+::-webkit-scrollbar-track {
+    background:
+        #050505;
+}
+
+::-webkit-scrollbar-thumb {
+
+    background:
+        #2a2a2a;
+
+    border-radius:
+        999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+
+    background:
+        #444;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div
+                class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm"
+                role="alert"
+            >
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="alert"
+                ></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    {% block content %}{% endblock %}
+
+</div>
+
+
+<!-- =====================================================
+     CEE MART MOBILE NAVIGATION
+===================================================== -->
+
+<nav class="bottom-nav">
+
+    <a
+        href="{% url 'mini_mart:dashboard' %}"
+        class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+    >
+        <i class="bi bi-grid-1x2-fill"></i>
+        Home
+    </a>
+
+
+    <a
+        href="{% url 'mini_mart:product_list' %}"
+        class="{% if request.resolver_match.url_name in 'product_list,product_add,product_edit,product_delete' %}active{% endif %}"
+    >
+        <i class="bi bi-box-seam-fill"></i>
+        Products
+    </a>
+
+
+    <a
+        href="{% url 'mini_mart:new_sale' %}"
+        class="{% if request.resolver_match.url_name == 'new_sale' %}active{% endif %}"
+    >
+        <i class="bi bi-plus-circle-fill"></i>
+        Sell
+    </a>
+
+
+    <a
+        href="{% url 'mini_mart:customer_list' %}"
+        class="{% if request.resolver_match.url_name in 'customer_list,customer_detail,customer_add' %}active{% endif %}"
+    >
+        <i class="bi bi-people-fill"></i>
+        Customers
+    </a>
+
+
+    <a
+        href="{% url 'mini_mart:debtors_list' %}"
+        class="{% if request.resolver_match.url_name == 'debtors_list' %}active{% endif %}"
+    >
+        <i class="bi bi-wallet2"></i>
+        Debts
+    </a>
+
+</nav>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
+
+</body>
+</html>

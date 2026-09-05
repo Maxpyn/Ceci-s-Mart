@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Customers | Total Debt: ₦{{ total_debt|floatformat:2|intcomma }}</h2>
+  <a href="{% url 'mini_mart:customer_add' %}" class="btn btn-success">+ Add Customer</a>
+</div>
+
+<table class="table table-striped">
+  <thead><tr><th>Name</th><th>Phone</th><th>Debt</th><th></th></tr></thead>
+  <tbody>
+  {% for c in customers %}
+    <tr class="{% if c.total_debt > 0 %}table-danger{% endif %}">
+      <td>{{ c.name }}</td>
+      <td>{{ c.phone_number|default:"-" }}</td> <!-- your field is phone_number, not phone -->
+    <td><strong>₦{{ c.total_debt|default:0|floatformat:2|intcomma }}</strong></td>
+  {% empty %}
+    <tr><td colspan="4">No customers yet. <a href="{% url 'mini_mart:customer_add' %}">Add one</a></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3 class="mb-3">
+    Edit {{ product.name }}
+</h3>
+
+<form method="POST">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button class="btn btn-primary w-100">
+        Update Product
+    </button>
+
+</form>
+
+{% endblock %}

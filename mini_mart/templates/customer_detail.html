@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block content %}
+<div class="card p-3 mb-3">
+  <h2>{{ customer.name }}</h2>
+  <p><strong>Phone:</strong> {{ customer.phone_number|default:"-" }} <br>
+     <strong>Address:</strong> {{ customer.address|default:"-" }} <br>
+     <strong class="text-danger fs-4">Debt: ₦{{ total_debt|floatformat:2|intcomma }}</strong>
+</div>
+
+<h4>Sales History</h4>
+<table class="table table-sm">
+  <thead><tr><th>Date</th><th>Total</th><th>Paid</th><th>Balance</th><th></th></tr></thead>
+  <tbody>
+  {% for s in sales %}
+    <tr>
+      <td>{{ s.created_at|date:"M d, Y" }}</td>
+      <td>₦{{ s.total_amount|intcomma }}</td>
+      <td>₦{{ s.amount_paid|intcomma }}</td>
+      <td>₦{{ s.balance|intcomma }}</td>
+      <td><a href="{% url 'mini_mart:sale_detail' s.pk %}" class="btn btn-sm btn-secondary">Receipt</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">No sales yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<a href="{% url 'mini_mart:customer_list' %}" class="btn btn-secondary">Back</a>
+{% endblock %}

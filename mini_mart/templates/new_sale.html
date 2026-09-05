@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-4">
+    <div class="page-kicker">Checkout</div>
+    <h1 class="fw-bold mb-1">New sale</h1>
+    <p class="text-muted mb-0">Find products, build the basket, and collect payment.</p>
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT: PRODUCT SEARCH -->
+    <div class="col-md-8">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">Choose products</h2>
+            <span class="badge rounded-pill text-bg-light">In stock</span>
+        </div>
+
+        <input
+            type="text"
+            id="search-box"
+            class="form-control form-control-lg mb-3"
+            placeholder="Search product name..."
+        >
+
+        <div id="product-results" class="list-group">
+
+            {% for p in products %}
+
+            <a
+                href="#"
+                class="list-group-item list-group-item-action add-to-cart"
+                data-id="{{ p.id }}"
+                data-name="{{ p.name }}"
+                data-price="{{ p.selling_price }}"
+                data-stock="{{ p.quantity }}"
+            >
+                {{ p.name }} -
+                ₦{{ p.selling_price }}
+
+                <small class="text-muted">
+                    Stock: {{ p.quantity }}
+                </small>
+            </a>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- RIGHT: CART -->
+    <div class="col-md-4">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="card cart-panel">
+
+                <div class="card-header">
+                    <strong><i class="bi bi-basket3 me-2"></i>Current basket</strong>
+                </div>
+
+                <ul
+                    id="cart-list"
+                    class="list-group list-group-flush"
+                ></ul>
+
+                <div class="card-body">
+
+                    <div class="page-kicker">Amount due</div>
+                    <h3 class="fw-bold mb-3">
+                        ₦<span id="cart-total">0.00</span>
+                    </h3>
+
+                    <!-- Hidden cart inputs -->
+                    <div id="cart-inputs"></div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success w-100 mt-2"
+                    >
+                        <i class="bi bi-arrow-right-circle me-1"></i> Continue to payment
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+const searchBox = document.getElementById('search-box');
+const resultsDiv = document.getElementById('product-results');
+const cartList = document.getElementById('cart-list');
+const cartTotalSpan = document.getElementById('cart-total');
+const cartInputs = document.getElementById('cart-inputs');
+
+let cart = {};
+
+// Product search
+searchBox.addEventListener('keyup', () => {
+
+    fetch(`?q=${encodeURIComponent(searchBox.value)}`, {
+        headers: {
+            'x-requested-with': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        resultsDiv.innerHTML = '';
+
+        data.forEach(p => {
+
+            resultsDiv.innerHTML += `
+                <a href="#"
+                   class="list-group-item list-group-item-action add-to-cart"
+                   data-id="${p.id}"
+                   data-name="${p.name}"
+                   data-price="${p.price}"
+                   data-stock="${p.stock}">
+
+                    ${p.name} - ₦${p.price}
+
+                    <small class="text-muted">
+                        Stock: ${p.stock}
+                    </small>
+
+                </a>
+            `;
+
+        });
+
+    })
+    .catch(error => {
+        console.error("Product search error:", error);
+    });
+
+});
+
+
+// Add product to cart
+document.addEventListener('click', function(e) {
+
+    const product = e.target.closest('.add-to-cart');
+
+    if (!product) {
+        return;
+    }
+
+    e.preventDefault();
+
+    const id = product.dataset.id;
+    const name = product.dataset.name;
+    const price = parseFloat(product.dataset.price);
+
+    if (cart[id]) {
+
+        cart[id].qty += 1;
+
+    } else {
+
+        cart[id] = {
+            name: name,
+            price: price,
+            qty: 1
+        };
+
+    }
+
+    renderCart();
+
+});
+
+
+// Render cart
+function renderCart() {
+
+    cartList.innerHTML = '';
+    cartInputs.innerHTML = '';
+
+    let total = 0;
+
+    for (const id in cart) {
+
+        const item = cart[id];
+
+        const lineTotal = item.price * item.qty;
+
+        total += lineTotal;
+
+        cartList.innerHTML += `
+            <li class="list-group-item d-flex justify-content-between">
+                <span>
+                    ${item.name} × ${item.qty}
+                </span>
+
+                <span>
+                    ₦${lineTotal.toFixed(2)}
+                </span>
+            </li>
+        `;
+
+        cartInputs.innerHTML += `
+            <input
+                type="hidden"
+                name="cart"
+                value="${id}:${item.qty}"
+            >
+        `;
+    }
+
+    cartTotalSpan.textContent = total.toFixed(2);
+
+}
+</script>
+
+{% endblock %}

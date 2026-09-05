@@ -1,0 +1,87 @@
+# Query: 
+
+32 results - 11 files
+
+ceemart\mini_mart\admin.py:
+  12  class CustomerAdmin(admin.ModelAdmin):
+  13:     list_display = ('name', 'phone_number', 'address', 'outstanding_debt')
+  14:     search_fields = ('name', 'phone_number', 'address', 'outstanding_debt')
+  15  
+
+  36      list_filter = ('is_paid', 'created_at') # FIX: removed payment_method, created_at
+  37:     search_fields = ('id', 'customer__name', 'customer__phone_number')
+  38      readonly_fields = ('balance', 'is_paid', 'created_at') # FIX: removed created_at
+
+ceemart\mini_mart\forms.py:
+  19          model = Customer
+  20:         fields = ['name', 'phone_number']
+  21          widgets = {
+  22              'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter customer name'}),
+  23:             'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0803...', 'inputmode': 'tel'}),
+  24          }
+
+ceemart\mini_mart\models.py:
+  27      name = models.CharField(max_length=100)
+  28:     phone_number = models.CharField(max_length=15, blank=True)
+  29      address = models.TextField(blank=True)
+
+ceemart\mini_mart\views.py:
+  155          name = request.POST.get('name', '').strip()
+  156:         phone_number = request.POST.get('phone_number', '').strip()
+  157:         if not name or not phone_number:
+  158:             messages.error(request, "Name and phone number required")
+  159          else:
+  160:             customer, created = Customer.objects.get_or_create(phone_number=phone_number, defaults={'name': name})
+  161              sale.customer = customer
+
+  173          name = request.POST.get('name')
+  174:         phone_number = request.POST.get('phone_number')
+  175:         customer, created = Customer.objects.get_or_create(phone_number=phone_number, defaults={'name': name})
+  176          sale.customer = customer
+
+  222              name=request.POST['name'],
+  223:             phone_number=request.POST.get('phone_number', ''),
+  224              address=request.POST.get('address', ''),
+
+ceemart\mini_mart\migrations\0001_initial.py:
+  19                  ('name', models.CharField(max_length=100)),
+  20:                 ('phone_number', models.CharField(blank=True, max_length=15)),
+  21              ],
+
+ceemart\mini_mart\templates\add_customer_to_sale.html:
+  13      <div class="mb-6">
+  14:       <label class="block text-sm font-medium mb-1">Phone Number</label>
+  15:       <input type="text" name="phone_number" required class="w-full border rounded-lg p-2" placeholder="0803...">
+  16        <p class="text-xs text-gray-500 mt-1">Used to avoid duplicate customers</p>
+
+ceemart\mini_mart\templates\customer_detail.html:
+  6    <h2>{{ customer.name }}</h2>
+  7:   <p><strong>phone_number:</strong> {{ customer.phone_number|default:"-" }} <br>
+  8       <strong>Address:</strong> {{ customer.address|default:"-" }} <br>
+
+ceemart\mini_mart\templates\customer_form.html:
+   9    </div>
+  10:   <div class="mb-3"><label class="form-label">phone_number</label>
+  11:     <input type="text" name="phone_number" class="form-control">
+  12    </div>
+
+ceemart\mini_mart\templates\customer_list.html:
+  10  <table class="table table-striped">
+  11:   <thead><tr><th>Name</th><th>phone_number</th><th>Debt</th><th></th></tr></thead>
+  12    <tbody>
+
+  15        <td>{{ c.name }}</td>
+  16:       <td>{{ c.phone_number|default:"-" }}</td> <!-- your field is phone_number, not phone -->
+  17      <td><strong>₦{{ c.total_debt|default:0|floatformat:2|intcomma }}</strong></td>
+
+ceemart\mini_mart\templates\debtors.html:
+  28  
+  29:             {% if sale.customer and sale.customer.phone_number %}
+  30                  <small>
+  31:                     📞 {{ sale.customer.phone_number }}
+  32                  </small><br>
+
+ceemart\mini_mart\templates\debts_hub.html:
+  14      <tr>
+  15:       <td><a href="{% url 'mini_mart:customer_detail' c.pk %}">{{ c.name }}</a><br><small>{{ c.phone_number }}</small></td>
+  16        <td class="fs-5 text-danger"><strong>₦{{ c.outstanding_debt|intcomma }}</strong></td>

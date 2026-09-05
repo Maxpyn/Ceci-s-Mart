@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<h3 class="fw-bold mb-3">Outstanding Debts</h3>
+
+<div class="card p-3 mb-3">
+    <h5 class="mb-0">
+        Total Outstanding: 
+        <span class="text-danger">₦{{ total_owed|intcomma }}</span>
+    </h5>
+</div>
+
+{% for sale in debts %}
+
+<div class="card p-3 mb-3">
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h5 class="fw-bold">
+                {% if sale.customer %}
+                    {{ sale.customer.name }}
+                {% else %}
+                    Walk-in Customer
+                {% endif %}
+            </h5>
+
+            {% if sale.customer and sale.customer.phone_number %}
+                <small>
+                    📞 {{ sale.customer.phone_number }}
+                </small><br>
+            {% endif %}
+
+            <small class="text-muted">
+                {{ sale.created_at|date:"d M Y, H:i" }}
+            </small>
+        </div>
+
+        <div class="text-end">
+            <div class="text-danger fw-bold fs-5">
+                ₦{{ sale.balance|intcomma }}
+            </div>
+
+            {% if sale.amount_paid == 0 %}
+                <small class="badge bg-danger">
+                    Credit
+                </small>
+            {% else %}
+                <small class="badge bg-warning text-dark">
+                    Part Payment
+                </small>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="d-grid gap-2">
+
+        <a href="{% url 'mini_mart:record_payment' sale.id %}"
+           class="btn btn-success">
+            💵 Pay Debt
+        </a>
+
+        {% if not sale.customer %}
+        <a href="{% url 'mini_mart:add_customer_to_sale' sale.id %}"
+           class="btn btn-outline-primary">
+            👤 Add Customer Details
+        </a>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card p-4 text-center">
+    <h5>No outstanding debts 🎉</h5>
+</div>
+
+{% endfor %}
+
+{% endblock %}

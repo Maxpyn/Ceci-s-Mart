@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Debts Hub{% endblock %}
+{% block content %}
+<div class="card bg-danger text-white p-3 mb-3">
+  <h2>Total Outstanding: ₦{{ total_outstanding|floatformat:2|intcomma }}</h2>
+  <p>{{ debtors|length }} Customers Owing</p>
+</div>
+
+<table class="table">
+  <thead><tr><th>Customer</th><th>Debt</th><th>Quick Pay</th></tr></thead>
+  <tbody>
+  {% for c in debtors %}
+    <tr>
+      <td><a href="{% url 'mini_mart:customer_detail' c.pk %}">{{ c.name }}</a><br><small>{{ c.phone_number }}</small></td>
+      <td class="fs-5 text-danger"><strong>₦{{ c.total_debt|intcomma }}</strong></td>
+      <td>
+        <form method="post" action="{% url 'mini_mart:pay_customer_debt' c.pk %}" class="d-flex gap-1">
+          {% csrf_token %}
+          <input type="number" step="0.01" name="amount" placeholder="Amount" class="form-control" style="width:120px;">
+          <button class="btn btn-success btn-sm">Pay</button>
+        </form>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="3">No outstanding debts. Good job!</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

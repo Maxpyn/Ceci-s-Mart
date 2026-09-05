@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white shadow-lg rounded-2xl p-6 mt-10">
+  <h2 class="text-2xl font-bold mb-2">Attach Customer to Sale #{{ sale.id }}</h2>
+  <p class="text-gray-600 mb-6">Outstanding Balance: <span class="font-bold text-red-600">₦{{ sale.balance|floatformat:2 }}</span></p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Customer Name</label>
+      <input type="text" name="name" required class="w-full border rounded-lg p-2" placeholder="e.g. Mama Nkechi">
+    </div>
+    <div class="mb-6">
+      <label class="block text-sm font-medium mb-1">Phone Number</label>
+      <input type="text" name="phone_number" required class="w-full border rounded-lg p-2" placeholder="0803...">
+      <p class="text-xs text-gray-500 mt-1">Used to avoid duplicate customers</p>
+    </div>
+
+    <div class="flex gap-2">
+      <button type="submit" class="flex-1 bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700">
+        Save Debt
+      </button>
+      <a href="{% url 'mini_mart:dashboard' %}" class="flex-1 text-center border py-2 rounded-lg hover:bg-gray-100">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

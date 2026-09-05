@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load maths_filters %} 
+
+{% block title %}Sale #{{ sale.id }}{% endblock %}
+
+{% block content %}
+
+<div class="card p-3 mb-3">
+    <h3>Sale Receipt #{{ sale.id }}</h3>
+
+    <p class="mb-1">
+        <strong>Date:</strong> {{ sale.created_at|date:"M d, Y H:i" }}
+    </p>
+
+    <p class="mb-1">
+        <strong>Customer:</strong>
+        {% if sale.customer %}
+            {{ sale.customer.name }}
+        {% else %}
+            Walk-in Customer
+        {% endif %}
+    </p>
+
+    <p class="mb-1">
+        <strong>Total:</strong> ₦{{ sale.total_amount|intcomma }}
+    </p>
+
+    <p class="mb-1">
+        <strong>Paid:</strong> ₦{{ sale.amount_paid|intcomma }}
+    </p>
+
+    <p class="mb-1">
+        <strong>Balance:</strong>
+        <span class="{% if sale.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+            ₦{{ sale.balance|intcomma }}
+        </span>
+    </p>
+</div>
+
+<!-- ITEMS SOLD -->
+<div class="card p-3 mb-3">
+    <h5>Items Sold</h5>
+
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for item in sale.items.all %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>₦{{ item.unit_price|intcomma }}</td>
+                <td>₦{{ item.subtotal|intcomma }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">No items found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- PAYMENT SECTION -->
+{% if sale.balance > 0 %}
+<div class="card p-3">
+
+    <h5 class="text-danger">Outstanding Payment</h5>
+
+    <form method="post" action="{% url 'mini_mart:record_payment' sale.id %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Amount to Pay</label>
+            <input type="number" name="amount" step="0.01" class="form-control mb-2" required>
+        </div>
+
+        <button class="btn btn-success">Record Payment</button>
+    </form>
+
+</div>
+
+{% else %}
+<div class="alert alert-success">
+    Fully Paid ✔️
+</div>
+{% endif %}
+
+<a href="{% url 'mini_mart:sales_list' %}" class="btn btn-secondary mt-3">
+    Back to Sales
+</a>
+
+{% endblock %}

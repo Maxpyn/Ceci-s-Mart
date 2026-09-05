@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+
+<div class="mb-4">
+    <div class="page-kicker">Overview</div>
+    <h1 class="fw-bold mb-1">Welcome, miss Ceci.</h1>
+    <p class="text-muted mb-0">Here is the pulse of your store today.</p>
+</div>
+
+<div class="row g-3">
+
+    <!-- KPI 1: Total Debt - Red, always top -->
+    <div class="col-12">
+        <div class="card kpi-red p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="page-kicker text-white opacity-75">Receivables</div>
+                    <h6 class="mb-0 opacity-75">Total outstanding</h6>
+                    <h2 class="mb-0 fw-bold">₦{{ total_debt|intcomma }}</h2>
+                    <small>{{ debtors_count }} debtors • {{ debt_records }} unpaid sales</small>
+                    <a href="{% url 'mini_mart:debtors_list' %}" class="btn btn-light btn-sm fw-semibold mt-2"><i class="bi bi-arrow-up-right"></i> View details</a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 2: Today Revenue -->
+    <div class="col-6">
+        <div class="card kpi-green p-3 text-center">
+            <div class="page-kicker text-white opacity-75">Today</div>
+            <h6 class="mb-0 opacity-75">Sales</h6>
+            <h4 class="mb-0 fw-bold">{{ today_sales_count }}</h4>
+            <small>₦{{ today_revenue|intcomma }}</small>
+            <a href="{% url 'mini_mart:sales_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                <i class="bi bi-arrow-up-right"></i> Sales history
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI 3: Potential Revenue -->
+    <div class="col-6">
+        <div class="card p-3 text-center">
+            <div class="page-kicker">Inventory upside</div>
+            <h6 class="mb-0 text-muted">Potential revenue</h6>
+            <h4 class="mb-0 fw-bold">₦{{ potential_revenue|intcomma }}</h4>
+        </div>
+    </div>
+
+    <!-- KPI 3: Potential Profit -->
+    <div class="col-6">
+        <div class="card p-3 text-center">
+            <h6 class="mb-0 text-muted">Potential Profit</h6>
+            <h4 class="mb-0 fw-bold">₦{{ potential_profit|intcomma }}</h4>
+        </div>
+    </div>
+
+    <div class="col-6">
+        <div class="card p-3 text-center">
+            <h6 class="mb-0 text-muted">Discounts Granted</h6>
+            <h4 class="mb-0 fw-bold">{{ total_discounts|intcomma }}</h4>
+        </div>
+    </div>
+
+    <div class="col-6">
+        <div class="card p-3 text-center">
+            <h6 class="mb-0 text-muted">Products</h6>
+            <h4 class="mb-0 fw-bold">{{ products_count }}</h4>
+            <a href="{% url 'mini_mart:product_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                View Products
+            </a>
+        </div>
+    </div>
+
+    <div class="col-6">
+        <div class="card p-3 text-center">
+            <h6 class="mb-0 text-muted">Customers</h6>
+            <h4 class="mb-0 fw-bold">{{ customers_count }}</h4>
+            <a href="{% url 'mini_mart:customer_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                View Customers
+            </a>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock %}
