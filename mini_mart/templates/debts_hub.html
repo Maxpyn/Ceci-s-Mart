@@ -7,6 +7,18 @@
   <p>{{ debtors|length }} Customers Owing</p>
 </div>
 
+<div class="card p-3 mb-3">
+  <form method="get">
+    <div class="input-group">
+      <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search debtor by name or phone">
+      <button class="btn btn-dark" type="submit">Search</button>
+      {% if q %}
+        <a href="{% url 'mini_mart:debts_hub' %}" class="btn btn-outline-secondary">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
 <table class="table">
   <thead><tr><th>Customer</th><th>Debt</th><th>Quick Pay</th></tr></thead>
   <tbody>

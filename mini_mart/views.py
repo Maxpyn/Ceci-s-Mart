@@ -372,9 +372,19 @@ def product_delete(request, pk):
     return render(request, 'product_confirm_delete.html', {'product': product})
 
 def debts_hub(request):
-    debtors = Customer.objects.filter(sale__balance__gt=0).distinct().order_by('name')
+    q = request.GET.get('q', '').strip()
+    debtors = Customer.objects.filter(sale__balance__gt=0)
+    if q:
+        debtors = debtors.filter(
+            Q(name__icontains=q) | Q(phone_number__icontains=q)
+        )
+    debtors = debtors.distinct().order_by('name')
     total_outstanding = Sale.objects.filter(balance__gt=0, customer__isnull=False).aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
-    return render(request, 'debts_hub.html', {'debtors': debtors, 'total_outstanding': total_outstanding})
+    return render(request, 'debts_hub.html', {
+        'debtors': debtors,
+        'total_outstanding': total_outstanding,
+        'q': q,
+    })
 
 def pay_customer_debt(request, pk):
     """Applies payment to oldest sales first. Uses Sale.balance not balance_due."""
