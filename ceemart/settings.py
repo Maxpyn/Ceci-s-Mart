@@ -63,6 +63,24 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'mini_mart',
+    'pwa',
+]
+
+PWA_SERVICE_WORKER_PATH = BASE_DIR / 'service-worker.js'
+PWA_APP_NAME = 'CeeMart POS'
+PWA_APP_DESCRIPTION = 'CeeMart point-of-sale application'
+PWA_APP_THEME_COLOR = '#050505'
+PWA_APP_BACKGROUND_COLOR = '#050505'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_START_URL = '/offline-sell/'
+PWA_APP_SCOPE = '/'
+PWA_APP_ICONS = [
+    {
+        'src': '/static/icons/icon-192.png.jpeg',
+        'sizes': '192x192',
+        'type': 'image/jpeg',
+        'purpose': 'any maskable',
+    },
 ]
 
 MIDDLEWARE = [
@@ -144,6 +162,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STORAGES = {
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',

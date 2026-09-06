@@ -17,10 +17,10 @@
 
     <link
         rel="apple-touch-icon"
-        href="/static/icons/icon-192.png"
+        href="/static/icons/icon-192.png.jpeg"
     >
 
-    <link rel="manifest" href="{% url 'mini_mart:manifest' %}">
+    <link rel="manifest" href="{% url 'manifest' %}">
 
     <!-- Bootstrap -->
     <link
@@ -1079,7 +1079,7 @@ p {
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register("{% url 'mini_mart:sw' %}");
+        navigator.serviceWorker.register("{% url 'serviceworker' %}");
     });
 }
 </script>

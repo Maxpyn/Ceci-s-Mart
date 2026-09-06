@@ -25,6 +25,7 @@ urlpatterns = [
     path("sales/", views.sales_history, name="sales_history"),
     path("sales/list/", views.sales_history, name="sales_list"),
     path("sale/<int:pk>/", views.sale_detail, name="sale_detail"),
+    path("sale/<int:pk>/delete/", views.sale_delete, name="sale_delete"),
     path(
         "sale/<int:pk>/add-customer/",
         views.add_customer_to_sale,
@@ -46,7 +47,4 @@ urlpatterns = [
         name="pay_customer_debt",
     ),
 
-    # Progressive Web App (PWA)
-    path("manifest.json", views.manifest, name="manifest"),
-    path("sw.js", views.sw, name="sw"),
 ]

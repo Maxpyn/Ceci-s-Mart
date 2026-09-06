@@ -1,5 +1,6 @@
 asgiref==3.11.1
 Django==6.0.6
+django-pwa==2.0.1
 dj-database-url==3.1.2
 django-crispy-forms==2.6
 gunicorn==26.0.0

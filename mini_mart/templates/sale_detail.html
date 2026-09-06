@@ -98,4 +98,15 @@
     Back to Sales
 </a>
 
+<form method="post" action="{% url 'mini_mart:sale_delete' sale.id %}" class="d-inline">
+    {% csrf_token %}
+    <button
+        type="submit"
+        class="btn btn-outline-danger mt-3"
+        onclick="return confirm('Delete this sale? The sold stock will be restored.')"
+    >
+        Delete Sale
+    </button>
+</form>
+
 {% endblock %}

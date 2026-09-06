@@ -83,6 +83,46 @@ class PosWorkflowTests(TestCase):
 		self.assertEqual(list(name_response.context["debtors"]), [matching_customer])
 		self.assertEqual(list(phone_response.context["debtors"]), [other_customer])
 
+	def test_debtors_list_search_matches_customer_phone_sale_or_product(self):
+		customer = Customer.objects.create(name="Ada Lovelace", phone_number="08023456789")
+		other_customer = Customer.objects.create(name="Grace Hopper", phone_number="09087654320")
+		other_product = Product.objects.create(
+			name="Beans",
+			quantity=10,
+			cost_price=Decimal("80.00"),
+			selling_price=Decimal("120.00"),
+		)
+		matching_sale = Sale.objects.create(
+			customer=customer,
+			total_amount=Decimal("150.00"),
+			cost_amount=Decimal("100.00"),
+		)
+		other_sale = Sale.objects.create(
+			customer=other_customer,
+			total_amount=Decimal("200.00"),
+			cost_amount=Decimal("120.00"),
+		)
+		SaleItem.objects.create(
+			sale=matching_sale,
+			product=self.product,
+			quantity=1,
+			unit_price=Decimal("150.00"),
+		)
+		SaleItem.objects.create(
+			sale=other_sale,
+			product=other_product,
+			quantity=1,
+			unit_price=Decimal("120.00"),
+		)
+
+		for query in ("lovelace", "08023456789", str(matching_sale.pk), "rice"):
+			with self.subTest(query=query):
+				response = self.client.get(reverse("mini_mart:debtors_list"), {"q": query})
+				self.assertEqual(list(response.context["debts"]), [matching_sale])
+
+		response = self.client.get(reverse("mini_mart:debtors_list"), {"q": "lovelace"})
+		self.assertEqual(response.context["total_owed"], Decimal("150.00"))
+
 	def test_sales_history_search_matches_product_name(self):
 		sale = Sale.objects.create(
 			total_amount=Decimal("150.00"),
@@ -99,6 +139,43 @@ class PosWorkflowTests(TestCase):
 
 		self.assertEqual(response.status_code, 200)
 		self.assertIn(sale, response.context["sales"])
+
+	def test_sale_delete_restores_stock_and_removes_credit_from_history(self):
+		customer = Customer.objects.create(name="Ada")
+		sale = Sale.objects.create(
+			customer=customer,
+			total_amount=Decimal("300.00"),
+			cost_amount=Decimal("200.00"),
+		)
+		SaleItem.objects.create(
+			sale=sale,
+			product=self.product,
+			quantity=2,
+			unit_price=Decimal("150.00"),
+		)
+		self.product.quantity = 8
+		self.product.save(update_fields=["quantity"])
+
+		response = self.client.post(reverse("mini_mart:sale_delete", args=[sale.pk]))
+
+		self.assertRedirects(response, reverse("mini_mart:sales_list"))
+		self.assertFalse(Sale.objects.filter(pk=sale.pk).exists())
+		self.assertEqual(Product.objects.get(pk=self.product.pk).quantity, 10)
+		self.assertEqual(
+			Sale.objects.filter(customer=customer, balance__gt=0).count(),
+			0,
+		)
+
+	def test_sale_delete_requires_post(self):
+		sale = Sale.objects.create(
+			total_amount=Decimal("150.00"),
+			cost_amount=Decimal("100.00"),
+		)
+
+		response = self.client.get(reverse("mini_mart:sale_delete", args=[sale.pk]))
+
+		self.assertEqual(response.status_code, 405)
+		self.assertTrue(Sale.objects.filter(pk=sale.pk).exists())
 
 	def test_product_with_sale_history_cannot_be_deleted(self):
 		sale = Sale.objects.create(

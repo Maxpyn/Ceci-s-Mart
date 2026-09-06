@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from django.db.models import Sum, F, DecimalField, Q
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from .forms import ProductForm, CustomerForm # remove SaleForm, PaymentForm if you don't use them
@@ -366,7 +366,7 @@ def sales_history(request):
 
     if q:
         sales = sales.filter(
-            Q(id__icontains=q) |
+            Q(id__iexact=q) |
             Q(customer__name__icontains=q) |
             Q(customer__phone_number__icontains=q) |
             Q(items__product__name__icontains=q)
@@ -383,6 +383,25 @@ def sale_detail(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
     items = sale.items.select_related('product') # using related_name="items"
     return render(request, 'sale_detail.html', {'sale': sale, 'items': items})
+
+@require_POST
+def sale_delete(request, pk):
+    with transaction.atomic():
+        sale = get_object_or_404(
+            Sale.objects.select_for_update(),
+            pk=pk,
+        )
+        items = list(sale.items.select_related('product').select_for_update())
+        for item in items:
+            product = Product.objects.select_for_update().get(pk=item.product_id)
+            product.quantity += item.quantity
+            product.save(update_fields=['quantity'])
+
+        sale_id = sale.pk
+        sale.delete()
+
+    messages.success(request, f'Sale #{sale_id} deleted and stock restored.')
+    return redirect('mini_mart:sales_list')
 
 def customer_list(request):
     customers = Customer.objects.all().order_by('name')
@@ -486,9 +505,22 @@ def pay_customer_debt(request, pk):
     return redirect('mini_mart:debts_hub')
 
 def debtors_list(request):
-    debts = Sale.objects.select_related('customer').filter(balance__gt=0).order_by('created_at')
+    q = request.GET.get('q', '').strip()
+    debts = Sale.objects.select_related('customer').filter(balance__gt=0)
+    if q:
+        debts = debts.filter(
+            Q(customer__name__icontains=q) |
+            Q(customer__phone_number__icontains=q) |
+            Q(id__icontains=q) |
+            Q(items__product__name__icontains=q)
+        ).distinct()
+    debts = debts.order_by('created_at')
     total_owed = debts.aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
-    return render(request, 'debtors.html', {'debts': debts, 'total_owed': total_owed})
+    return render(request, 'debtors.html', {
+        'debts': debts,
+        'total_owed': total_owed,
+        'q': q,
+    })
 
 @require_POST 
 def add_to_cart_ajax(request):
@@ -502,40 +534,3 @@ def add_to_cart_ajax(request):
     total_items = sum(cart.values())
     return JsonResponse({'status': 'ok', 'total_items': total_items})
 
-def manifest(request):
-    data = {
-        "name": "CeeMart POS", "short_name": "CeeMart", "start_url": "/",
-        "display": "standalone", "background_color": "#ffffff", "theme_color": "#D62828",
-        "icons": [
-            {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
-            {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
-        ]
-    }
-    return JsonResponse(data)
-
-def sw(request):
-    sw_code = """
-        const CACHE = 'ceemart-shell-v1';
-        const SHELL = ['/', '/offline-sell/'];
-
-        self.addEventListener('install', event => {
-            event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
-            self.skipWaiting();
-        });
-
-        self.addEventListener('activate', event => {
-            event.waitUntil(self.clients.claim());
-        });
-
-    self.addEventListener('fetch', event => {
-            if (event.request.method !== 'GET') return;
-            event.respondWith(
-                fetch(event.request).then(response => {
-                    const copy = response.clone();
-                    caches.open(CACHE).then(cache => cache.put(event.request, copy));
-                    return response;
-                }).catch(() => caches.match(event.request).then(cached => cached || caches.match('/offline-sell/')))
-            );
-    });
-    """
-    return HttpResponse(sw_code, content_type='application/javascript')
