@@ -27,5 +27,23 @@
   </tbody>
 </table>
 
+<h4>Existing Debts</h4>
+<table class="table table-sm">
+  <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Paid</th><th>Balance</th></tr></thead>
+  <tbody>
+  {% for debt in existing_debts %}
+    <tr>
+      <td>{{ debt.created_at|date:"M d, Y" }}</td>
+      <td>{{ debt.description|default:"Existing debt" }}</td>
+      <td>₦{{ debt.amount|intcomma }}</td>
+      <td>₦{{ debt.amount_paid|intcomma }}</td>
+      <td>₦{{ debt.balance|intcomma }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">No existing debts recorded.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
 <a href="{% url 'mini_mart:customer_list' %}" class="btn btn-secondary">Back</a>
 {% endblock %}

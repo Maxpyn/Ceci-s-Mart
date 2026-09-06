@@ -99,8 +99,22 @@
 
 </div>
 
-{% empty %}
+{% endfor %}
 
+{% for debt in existing_debts %}
+<div class="card p-3 mb-3">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h5 class="fw-bold">{{ debt.customer.name }}</h5>
+            {% if debt.customer.phone_number %}<small>📞 {{ debt.customer.phone_number }}</small><br>{% endif %}
+            <small class="text-muted">{{ debt.description|default:"Existing debt" }} · {{ debt.created_at|date:"d M Y, H:i" }}</small>
+        </div>
+        <div class="text-danger fw-bold fs-5">₦{{ debt.balance|intcomma }}</div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not debts and not existing_debts %}
 <div class="card p-4 text-center">
     {% if q %}
         <h5>No debts matched your search.</h5>
@@ -109,7 +123,6 @@
         <h5>No outstanding debts 🎉</h5>
     {% endif %}
 </div>
-
-{% endfor %}
+{% endif %}
 
 {% endblock %}

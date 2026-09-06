@@ -7,6 +7,10 @@
   <p>{{ debtors|length }} Customers Owing</p>
 </div>
 
+<a href="{% url 'mini_mart:add_existing_debt' %}" class="btn btn-primary mb-3">
+  Add Existing Debt
+</a>
+
 <div class="card p-3 mb-3">
   <form method="get">
     <div class="input-group">

@@ -5,7 +5,7 @@ from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Customer, Product, Sale, SaleItem
+from .models import Customer, ExistingDebt, Product, Sale, SaleItem
 
 
 class PosWorkflowTests(TestCase):
@@ -66,6 +66,27 @@ class PosWorkflowTests(TestCase):
 
 		self.assertContains(response, "₦150.00")
 		self.assertEqual(response.context["total_outstanding"], Decimal("150.00"))
+
+	def test_existing_debt_is_added_and_paid_through_customer_debt_flow(self):
+		customer = Customer.objects.create(name="Ada")
+
+		response = self.client.post(
+			reverse("mini_mart:add_existing_debt"),
+			{"customer": customer.pk, "amount": "275.00", "description": "Old balance"},
+		)
+
+		self.assertRedirects(response, reverse("mini_mart:debts_hub"))
+		debt = ExistingDebt.objects.get(customer=customer)
+		self.assertEqual(debt.balance, Decimal("275.00"))
+		self.assertEqual(customer.total_debt, Decimal("275.00"))
+
+		self.client.post(
+			reverse("mini_mart:pay_customer_debt", args=[customer.pk]),
+			{"amount": "100.00"},
+		)
+		debt.refresh_from_db()
+		self.assertEqual(debt.amount_paid, Decimal("100.00"))
+		self.assertEqual(debt.balance, Decimal("175.00"))
 
 	def test_debts_hub_search_matches_customer_name_or_phone(self):
 		matching_customer = Customer.objects.create(name="Ada Lovelace", phone_number="08012345678")

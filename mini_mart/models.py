@@ -53,7 +53,11 @@ class Customer(models.Model):
 
     @property
     def total_debt(self):
-        return sum(s.balance for s in self.sale_set.all())
+        sale_debt = sum(s.balance for s in self.sale_set.filter(balance__gt=0))
+        existing_debt = sum(
+            debt.balance for debt in self.existingdebt_set.filter(balance__gt=0)
+        )
+        return sale_debt + existing_debt
 
     @property
     def is_debtor(self):
@@ -61,6 +65,37 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ExistingDebt(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    description = models.CharField(max_length=200, blank=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount_paid = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+    balance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        editable=False,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        if self.amount <= 0:
+            raise ValidationError("Debt amount must be greater than zero.")
+        if self.amount_paid < 0 or self.amount_paid > self.amount:
+            raise ValidationError("Amount paid must be between zero and the debt amount.")
+
+    def save(self, *args, **kwargs):
+        self.balance = self.amount - self.amount_paid
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Debt for {self.customer}"
 
 
 class Sale(models.Model):

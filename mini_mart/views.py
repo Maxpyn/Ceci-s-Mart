@@ -8,8 +8,8 @@ from django.db.models import Sum, F, DecimalField, Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
-from .forms import ProductForm, CustomerForm # remove SaleForm, PaymentForm if you don't use them
-from .models import Product, Sale, SaleItem, Customer
+from .forms import ExistingDebtForm, ProductForm, CustomerForm # remove SaleForm, PaymentForm if you don't use them
+from .models import ExistingDebt, Product, Sale, SaleItem, Customer
 
 def dashboard(request):
     today = timezone.now().date()
@@ -71,13 +71,19 @@ def dashboard(request):
     # =====================================================
 
     unpaid_sales = Sale.objects.filter(balance__gt=0)
+    existing_debts = ExistingDebt.objects.filter(balance__gt=0)
     debt_records = unpaid_sales.count()
     total_debt = unpaid_sales.aggregate(
         total=Sum('balance')
     )['total'] or Decimal('0.00')
+    total_debt += existing_debts.aggregate(total=Sum('balance'))['total'] or Decimal('0.00')
     debtors_count = unpaid_sales.exclude(
         customer__isnull=True
     ).values('customer').distinct().count()
+    debtors_count += existing_debts.values('customer').distinct().exclude(
+        customer__in=unpaid_sales.values('customer')
+    ).count()
+    debt_records += existing_debts.count()
 
     context = {
         # Counts
@@ -406,15 +412,17 @@ def sale_delete(request, pk):
 def customer_list(request):
     customers = Customer.objects.all().order_by('name')
     total_debt = Sale.objects.filter(balance__gt=0).aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
+    total_debt += ExistingDebt.objects.filter(balance__gt=0).aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
     return render(request, 'customer_list.html', {'customers': customers, 'total_debt': total_debt})
 
 def customer_detail(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     sales = customer.sale_set.all().order_by('-created_at')
+    existing_debts = customer.existingdebt_set.all().order_by('-created_at')
     total_spent = sales.aggregate(t=Sum('total_amount'))['t'] or Decimal('0.00')
-    total_debt = sales.aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
+    total_debt = customer.total_debt
     return render(request, 'customer_detail.html', {
-        'customer': customer, 'sales': sales, 
+        'customer': customer, 'sales': sales, 'existing_debts': existing_debts,
         'total_spent': total_spent, 'total_debt': total_debt,
     })
 
@@ -473,13 +481,16 @@ def product_delete(request, pk):
 
 def debts_hub(request):
     q = request.GET.get('q', '').strip()
-    debtors = Customer.objects.filter(sale__balance__gt=0)
+    debtors = Customer.objects.filter(
+        Q(sale__balance__gt=0) | Q(existingdebt__balance__gt=0)
+    )
     if q:
         debtors = debtors.filter(
             Q(name__icontains=q) | Q(phone_number__icontains=q)
         )
     debtors = debtors.distinct().order_by('name')
     total_outstanding = Sale.objects.filter(balance__gt=0, customer__isnull=False).aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
+    total_outstanding += ExistingDebt.objects.filter(balance__gt=0).aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
     return render(request, 'debts_hub.html', {
         'debtors': debtors,
         'total_outstanding': total_outstanding,
@@ -487,19 +498,25 @@ def debts_hub(request):
     })
 
 def pay_customer_debt(request, pk):
-    """Applies payment to oldest sales first. Uses Sale.balance not balance_due."""
+    """Applies payment to the customer's oldest outstanding records first."""
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
-        amount = Decimal(request.POST.get('amount', '0'))
+        try:
+            amount = Decimal(request.POST.get('amount', '0'))
+        except ArithmeticError:
+            amount = Decimal('0')
         if amount <= 0:
             messages.error(request, 'Payment must be greater than zero.')
             return redirect('mini_mart:debts_hub')
         remaining = amount
-        for sale in customer.sale_set.filter(balance__gt=0).order_by('created_at'):
+        records = list(customer.sale_set.filter(balance__gt=0))
+        records += list(customer.existingdebt_set.filter(balance__gt=0))
+        records.sort(key=lambda record: record.created_at)
+        for record in records:
             if remaining <= 0: break
-            pay = min(remaining, sale.balance)
-            sale.amount_paid += pay
-            sale.save() # updates balance
+            pay = min(remaining, record.balance)
+            record.amount_paid += pay
+            record.save()
             remaining -= pay
         messages.success(request, f'₦{amount:,.2f} received from {customer.name}')
     return redirect('mini_mart:debts_hub')
@@ -516,11 +533,32 @@ def debtors_list(request):
         ).distinct()
     debts = debts.order_by('created_at')
     total_owed = debts.aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
+    existing_debts = ExistingDebt.objects.select_related('customer').filter(balance__gt=0)
+    if q:
+        existing_debts = existing_debts.filter(
+            Q(customer__name__icontains=q) |
+            Q(customer__phone_number__icontains=q) |
+            Q(description__icontains=q)
+        )
+    existing_debts = existing_debts.order_by('created_at')
+    total_owed += existing_debts.aggregate(t=Sum('balance'))['t'] or Decimal('0.00')
     return render(request, 'debtors.html', {
         'debts': debts,
+        'existing_debts': existing_debts,
         'total_owed': total_owed,
         'q': q,
     })
+
+def add_existing_debt(request):
+    if request.method == 'POST':
+        form = ExistingDebtForm(request.POST)
+        if form.is_valid():
+            debt = form.save()
+            messages.success(request, f'Debt of ₦{debt.amount:,.2f} added for {debt.customer.name}.')
+            return redirect('mini_mart:debts_hub')
+    else:
+        form = ExistingDebtForm()
+    return render(request, 'existing_debt_form.html', {'form': form})
 
 @require_POST 
 def add_to_cart_ajax(request):

@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django import forms
 
-from .models import Customer, Product, Sale
+from .models import Customer, ExistingDebt, Product, Sale
 
 
 class ProductForm(forms.ModelForm):
@@ -190,4 +190,19 @@ class SalePaymentForm(forms.ModelForm):
                     "value": "0",
                 }
             )
+        }
+
+
+class ExistingDebtForm(forms.ModelForm):
+    class Meta:
+        model = ExistingDebt
+        fields = ["customer", "amount", "description"]
+        widgets = {
+            "customer": forms.Select(attrs={"class": "form-select"}),
+            "amount": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "min": "0.01", "inputmode": "decimal"}
+            ),
+            "description": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "What is this debt for?"}
+            ),
         }

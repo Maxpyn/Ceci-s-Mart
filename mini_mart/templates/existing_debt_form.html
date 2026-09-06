@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Add Existing Debt{% endblock %}
+{% block content %}
+<div class="card p-4">
+  <h3 class="fw-bold mb-3">Add Existing Debt</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Save Debt</button>
+    <a class="btn btn-outline-secondary" href="{% url 'mini_mart:debts_hub' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

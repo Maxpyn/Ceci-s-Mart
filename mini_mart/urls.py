@@ -41,6 +41,7 @@ urlpatterns = [
     # Debtors
     path("debtors/", views.debtors_list, name="debtors_list"),
     path("debts/", views.debts_hub, name="debts_hub"),
+    path("debts/add/", views.add_existing_debt, name="add_existing_debt"),
     path(
         "debts/customer/<int:pk>/pay/",
         views.pay_customer_debt,

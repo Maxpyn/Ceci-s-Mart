@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Product, Customer, Sale, SaleItem
+from .models import ExistingDebt, Product, Customer, Sale, SaleItem
+
+
+@admin.register(ExistingDebt)
+class ExistingDebtAdmin(admin.ModelAdmin):
+    list_display = ("customer", "description", "amount", "amount_paid", "balance", "created_at")
+    search_fields = ("customer__name", "customer__phone_number", "description")
+    readonly_fields = ("balance", "created_at")
 
 
 @admin.register(Product)
