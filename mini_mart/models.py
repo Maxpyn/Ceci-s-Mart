@@ -8,10 +8,31 @@ from django.db.models.deletion import PROTECT
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
+
+    # Stock is stored in the smallest sellable base unit. For example,
+    # store 540 cups rather than 30 mudus.
     quantity = models.PositiveIntegerField(default=0)
     initial_quantity = models.PositiveIntegerField(default=0)
+
+    base_unit = models.CharField(max_length=50, default="Unit")
+
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    has_alternative_unit = models.BooleanField(default=False)
+    alternative_unit = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+    alternative_unit_quantity = models.PositiveIntegerField(default=1)
+    alternative_selling_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+
     date_added = models.DateTimeField(auto_now_add=True)
     is_available = models.BooleanField(default=True)
 
@@ -31,12 +52,42 @@ class Product(models.Model):
     def potential_profit(self):
         return self.initial_quantity * (self.selling_price - self.cost_price)
 
+    @property
+    def alternative_unit_cost_price(self):
+        if not self.has_alternative_unit:
+            return None
+        return self.cost_price * self.alternative_unit_quantity
+
+    @property
+    def alternative_unit_stock(self):
+        if not self.has_alternative_unit or self.alternative_unit_quantity <= 0:
+            return 0
+        return self.quantity // self.alternative_unit_quantity
+
+    def clean(self):
+        super().clean()
+
+        if not self.has_alternative_unit:
+            return
+
+        if not self.alternative_unit:
+            raise ValidationError("Alternative unit name is required.")
+
+        if self.alternative_unit_quantity <= 0:
+            raise ValidationError(
+                "Alternative unit quantity must be greater than zero."
+            )
+
+        if self.alternative_selling_price is None:
+            raise ValidationError("Alternative selling price is required.")
+
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         if self._state.adding and not self.initial_quantity:
             self.initial_quantity = self.quantity
+        self.full_clean()
         super().save(*args, **kwargs)
 
 
