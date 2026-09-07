@@ -1044,7 +1044,7 @@ p {
 
 
     <a
-        href="{% url 'mini_mart:offline_pos' %}"
+        href="{% url 'mini_mart:new_sale' %}"
         class="{% if request.resolver_match.url_name in 'new_sale,offline_pos' %}active{% endif %}"
     >
         <i class="bi bi-plus-circle-fill"></i>
@@ -1062,8 +1062,8 @@ p {
 
 
     <a
-        href="{% url 'mini_mart:debtors_list' %}"
-        class="{% if request.resolver_match.url_name == 'debtors_list' %}active{% endif %}"
+        href="{% url 'mini_mart:debts_hub' %}"
+        class="{% if request.resolver_match.url_name in 'debtors_list,debts_hub,add_existing_debt' %}active{% endif %}"
     >
         <i class="bi bi-wallet2"></i>
         Debts

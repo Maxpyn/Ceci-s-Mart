@@ -9,50 +9,8 @@
 
 <div class="row g-4">
 
-    <!-- LEFT: PRODUCT SEARCH -->
-    <div class="col-md-8">
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h4 fw-bold mb-0">Choose products</h2>
-            <span class="badge rounded-pill text-bg-light">In stock</span>
-        </div>
-
-        <input
-            type="text"
-            id="search-box"
-            class="form-control form-control-lg mb-3"
-            placeholder="Search product name..."
-        >
-
-        <div id="product-results" class="list-group">
-
-            {% for p in products %}
-
-            <a
-                href="#"
-                class="list-group-item list-group-item-action add-to-cart"
-                data-id="{{ p.id }}"
-                data-name="{{ p.name }}"
-                data-price="{{ p.selling_price }}"
-                data-stock="{{ p.quantity }}"
-            >
-                {{ p.name }} -
-                ₦{{ p.selling_price }}
-
-                <small class="text-muted">
-                    Stock: {{ p.quantity }}
-                </small>
-            </a>
-
-            {% endfor %}
-
-        </div>
-
-    </div>
-
-
-    <!-- RIGHT: CART -->
-    <div class="col-md-4">
+    <!-- CART -->
+    <div class="col-12">
 
         <form method="post">
 
@@ -93,6 +51,49 @@
         </form>
 
     </div>
+
+
+    <!-- PRODUCT SEARCH -->
+    <div class="col-12">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">Choose products</h2>
+            <span class="badge rounded-pill text-bg-light">In stock</span>
+        </div>
+
+        <input
+            type="text"
+            id="search-box"
+            class="form-control form-control-lg mb-3"
+            placeholder="Search product name..."
+        >
+
+        <div id="product-results" class="list-group">
+
+            {% for p in products %}
+
+            <a
+                href="#"
+                class="list-group-item list-group-item-action add-to-cart"
+                data-id="{{ p.id }}"
+                data-name="{{ p.name }}"
+                data-price="{{ p.selling_price }}"
+                data-stock="{{ p.quantity }}"
+            >
+                {{ p.name }} -
+                ₦{{ p.selling_price }}
+
+                <small class="text-muted">
+                    Stock: {{ p.quantity }}
+                </small>
+            </a>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
 
 </div>
 
