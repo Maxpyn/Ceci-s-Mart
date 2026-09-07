@@ -12,8 +12,13 @@ class ProductForm(forms.ModelForm):
             "name",
             "description",
             "quantity",
+            "base_unit",
             "cost_price",
             "selling_price",
+            "has_alternative_unit",
+            "alternative_unit",
+            "alternative_unit_quantity",
+            "alternative_selling_price",
         ]
 
         widgets = {
@@ -36,6 +41,12 @@ class ProductForm(forms.ModelForm):
                     "inputmode": "numeric",
                 }
             ),
+            "base_unit": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "e.g. Cup, Kg, Piece",
+                }
+            ),
             "cost_price": forms.NumberInput(
                 attrs={
                     "class": "form-control",
@@ -47,6 +58,30 @@ class ProductForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "step": "0.01",
+                    "inputmode": "decimal",
+                }
+            ),
+            "has_alternative_unit": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),
+            "alternative_unit": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "e.g. Mudu, Crate, Dozen",
+                }
+            ),
+            "alternative_unit_quantity": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "min": "1",
+                    "inputmode": "numeric",
+                }
+            ),
+            "alternative_selling_price": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "step": "0.01",
+                    "min": "0",
                     "inputmode": "decimal",
                 }
             ),

@@ -17,6 +17,38 @@ class PosWorkflowTests(TestCase):
 			selling_price=Decimal("150.00"),
 		)
 
+	def test_product_form_shows_and_saves_alternative_unit_fields(self):
+		form_response = self.client.get(reverse("mini_mart:product_add"))
+
+		self.assertContains(form_response, 'name="base_unit"')
+		self.assertContains(form_response, 'name="has_alternative_unit"')
+		self.assertContains(form_response, 'name="alternative_unit"')
+		self.assertContains(form_response, 'name="alternative_unit_quantity"')
+		self.assertContains(form_response, 'name="alternative_selling_price"')
+
+		response = self.client.post(
+			reverse("mini_mart:product_add"),
+			{
+				"name": "Rice Cup",
+				"description": "Sold by cup or mudu",
+				"quantity": 540,
+				"base_unit": "Cup",
+				"cost_price": "84.00",
+				"selling_price": "100.00",
+				"has_alternative_unit": "on",
+				"alternative_unit": "Mudu",
+				"alternative_unit_quantity": 18,
+				"alternative_selling_price": "1800.00",
+			},
+		)
+
+		self.assertRedirects(response, reverse("mini_mart:product_list"))
+		product = Product.objects.get(name="Rice Cup")
+		self.assertEqual(product.base_unit, "Cup")
+		self.assertEqual(product.alternative_unit, "Mudu")
+		self.assertEqual(product.alternative_unit_quantity, 18)
+		self.assertEqual(product.alternative_selling_price, Decimal("1800.00"))
+
 	def test_checkout_consolidates_cart_and_reduces_stock(self):
 		response = self.client.post(
 			reverse("mini_mart:new_sale"),
